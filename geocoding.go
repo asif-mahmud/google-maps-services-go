@@ -34,7 +34,9 @@ var geocodingAPI = &apiConfig{
 // Geocode makes a Geocoding API request
 func (c *Client) Geocode(ctx context.Context, r *GeocodingRequest) (GeocodingResponse, error) {
 	if r.Address == "" && len(r.Components) == 0 && r.LatLng == nil {
-		return GeocodingResponse{}, errors.New("maps: address, components and LatLng are all missing")
+		return GeocodingResponse{}, errors.New(
+			"maps: address, components and LatLng are all missing",
+		)
 	}
 
 	var response struct {
@@ -54,14 +56,17 @@ func (c *Client) Geocode(ctx context.Context, r *GeocodingRequest) (GeocodingRes
 }
 
 // ReverseGeocode makes a Reverse Geocoding API request
-func (c *Client) ReverseGeocode(ctx context.Context, r *GeocodingRequest) (GeocodingResponse, error) {
+func (c *Client) ReverseGeocode(
+	ctx context.Context,
+	r *GeocodingRequest,
+) (GeocodingResponse, error) {
 	// Since Geocode() does not allow a nil LatLng, whereas it is allowed here
 	if r.LatLng == nil && r.PlaceID == "" {
 		return GeocodingResponse{}, errors.New("maps: LatLng and PlaceID are both missing")
 	}
 
 	var response struct {
-		Results []GeocodingResult `json:"results"`
+		Results           []GeocodingResult `json:"results"`
 		AddressDescriptor AddressDescriptor `json:"address_descriptor"`
 		commonResponse
 	}
@@ -229,6 +234,12 @@ type GeocodingResult struct {
 	// However, if the result is in a remote location (for example, an ocean or desert)
 	// only the global code may be returned.
 	PlusCode AddressPlusCode `json:"plus_code"`
+
+	// Buildings contains boundary calculations if specified by query parameter
+	// extra_computations in the request (see
+	// https://developers.google.com/maps/documentation/geocoding/building-attributes).
+	// This can be requested by the GeocodingRequest.Custom parameter.
+	Buildings []Building `json:"buildings"`
 }
 
 // AddressPlusCode (see https://en.wikipedia.org/wiki/Open_Location_Code and https://plus.codes/)
@@ -263,4 +274,20 @@ type AddressGeometry struct {
 	Bounds       LatLngBounds `json:"bounds"`
 	Viewport     LatLngBounds `json:"viewport"`
 	Types        []string     `json:"types"`
+}
+
+// DisplayPolygon is the bounding polygon of a building
+type DisplayPolygon struct {
+	Coordinates [][][]float64 `json:"coordinates"`
+}
+
+// BuildingOutline is the outline of a building
+type BuildingOutline struct {
+	DisplayPolygon DisplayPolygon `json:"display_polygon"`
+	PlaceId        string         `json:"place_id"`
+}
+
+// Building is the boundary of a building
+type Building struct {
+	BuildingOutlines []BuildingOutline `json:"building_outlines"`
 }
