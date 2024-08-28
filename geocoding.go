@@ -235,10 +235,18 @@ type GeocodingResult struct {
 	// only the global code may be returned.
 	PlusCode AddressPlusCode `json:"plus_code"`
 
-	// Buildings contains boundary calculations if specified by query parameter
-	// extra_computations in the request (see
-	// https://developers.google.com/maps/documentation/geocoding/building-attributes).
-	// This can be requested by the GeocodingRequest.Custom parameter.
+	// Entrances define list of entry or exit points into a place
+	// (see https://developers.google.com/maps/documentation/geocoding/building-attributes).
+	// This can be requested by sending extra_computations by the
+	// GeocodingRequest.Custom parameter
+	// (see https://developers.google.com/maps/documentation/geocoding/requests-geocoding).
+	Entrances []Entrance `json:"entrances"`
+
+	// Buildings contain 2D polygon representing the surface area covered by
+	// the building (see https://developers.google.com/maps/documentation/geocoding/building-attributes).
+	// This can be requested by sending extra_computations by the
+	// GeocodingRequest.Custom parameter
+	// (see https://developers.google.com/maps/documentation/geocoding/requests-geocoding).
 	Buildings []Building `json:"buildings"`
 }
 
@@ -279,15 +287,22 @@ type AddressGeometry struct {
 // DisplayPolygon is the bounding polygon of a building
 type DisplayPolygon struct {
 	Coordinates [][][]float64 `json:"coordinates"`
+	Type        string        `json:"type"`
 }
 
 // BuildingOutline is the outline of a building
 type BuildingOutline struct {
 	DisplayPolygon DisplayPolygon `json:"display_polygon"`
-	PlaceId        string         `json:"place_id"`
 }
 
 // Building is the boundary of a building
 type Building struct {
 	BuildingOutlines []BuildingOutline `json:"building_outlines"`
+	PlaceId          string            `json:"place_id"`
+}
+
+// Entrance is the entrance of a structure or building
+type Entrance struct {
+	Location        LatLng `json:"location"`
+	BuildingPlaceId string `json:"building_place_id"`
 }
